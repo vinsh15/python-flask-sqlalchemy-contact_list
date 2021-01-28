@@ -64,24 +64,53 @@ def add_new_contact():
 
 @app.route('/contacts/<int:position>', methods=['PATCH'])
 def upgrade_contact(position):
-    body = request.json()
+    body = request.get_json()
     contact_to_upgrade = Contact.query.get(position)
-    if 'full_name' is in body
+    if contact_to_upgrade is None:
+        raise APIException('You need to specify an existing contact', status_code=400)
+    if 'full_name' != None:
         new_full_name = body['full_name']
         contact_to_upgrade.full_name = new_full_name
-    if 'email' is in body
+    if 'email' != None:
         new_email = body['email']
         contact_to_upgrade.email = new_email
-    if 'address' is in body
+    if 'address' != None:
         new_address = body['address']
         contact_to_upgrade.address = new_address
-    if 'phone' is in body
+    if 'phone' != None:
         new_phone = body['phone']
         contact_to_upgrade.phone = new_phone
 
     db.session.commit()
+    return 'Hizo el Cambio'
 
-
+@app.route('/contacts/<int:position>', methods=['PUT'])
+def update_allcontact(position):
+    body = request.get_json()
+    contact = Contact.query.get(position)
+    if isinstance (body, dict):
+        if body is None:
+            raise APIException("You need to specify the request body as a json object", status_code=400)
+        if contact is None:
+            raise APIException('You need to specify an existing contact', status_code=400)
+        if 'full_name' not in body:
+            raise APIException('You need to specify the username', status_code=400)
+        if 'email' not in body:
+            raise APIException('You need to specify the email', status_code=400)
+        if 'address' not in body:
+            raise APIException('You need to specify the address', status_code=400)
+        if 'phone' not in body:
+            raise APIException('You need to specify the phone', status_code=400)
+    else: return "no es un diccionario"
+    # at this point, all data has been validated, we can proceed to inster into the bd
+    Contact.query.filter(Contact.id==position).update({
+        "email": body['email'],
+        "full_name": body['full_name'],
+        "address": body['address'],
+        "phone": body['phone']
+        })
+    db.session.commit()
+    return "ok", 200
 
 @app.route('/contacts/<int:position>', methods=['GET'])
 def handle_one_contact(position):
